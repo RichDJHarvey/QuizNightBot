@@ -25,7 +25,6 @@ client.once('clientReady', async () => {
     );
 
     console.log("Bot ready");
-
 });
 
 client.on('interactionCreate', interaction => handleInteraction(interaction, client, quiz));

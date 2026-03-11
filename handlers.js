@@ -31,17 +31,15 @@ async function handleInteraction(interaction, client, quiz) {
             ephemeral: true
         });
 
-        // Routing first...
         const routingMsg = await channel.send({
-            content: "Answer routing for this quiz 👇",
+            content: "Answer routing for this quiz",
             embeds: [buildRoutes(routes)]
         });
 
         quiz.routingMessageId = routingMsg.id;
 
-        // ...leaderboard second, so it's always the most recent message
         const leaderboardMsg = await channel.send({
-            content: "Quiz started! Leaderboard below 👇",
+            content: "Quiz started!",
             embeds: [buildLeaderboard([])]
         });
 
