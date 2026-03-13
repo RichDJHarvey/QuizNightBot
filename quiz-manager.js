@@ -1,88 +1,128 @@
-class QuizManager {
+const fs = require('fs');
 
-    constructor() {
+const DATA_FILE = './quizData.json';
 
-        this.players = [];
-        this.scores = {};
-        this.routes = [];
-        this.pendingUsers = [];
+let quizzes = new Map();
 
-        this.channelId = null;
+const loadData = () => {
+    if (fs.existsSync(DATA_FILE)) {
+        const raw = fs.readFileSync(DATA_FILE);
+        const parsed = JSON.parse(raw);
+        quizzes = new Map(Object.entries(parsed));
+    }
+};
 
-        this.leaderboardMessageId = null;
-        this.routingMessageId = null;
+const saveData = () => {
+    const obj = Object.fromEntries(quizzes);
+    fs.writeFileSync(DATA_FILE, JSON.stringify(obj, null, 2));
+};
 
-        this.active = false;
+loadData();
+
+const capitalizeName = (name) => {
+    if (!name) {
+        return '';
+    } else {
+        return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+    }
+};
+
+const getQuiz = (guildId) => {
+    if (!quizzes.has(guildId)) {
+        quizzes.set(guildId, {
+            active: false,
+            players: [],
+            scores: {},
+            routes: [],
+            nameMap: {},
+            leaderboardMessageId: null,
+            routingMessageId: null,
+            channelId: null
+        });
+        saveData();
+    }
+    return quizzes.get(guildId);
+};
+
+const startQuiz = (guildId, channelId) => {
+    const quiz = getQuiz(guildId);
+    quiz.active = true;
+    quiz.channelId = channelId;
+    if (!quiz.players) {
+        quiz.players = [];
+    }
+    if (!quiz.scores) {
+        quiz.scores = {};
+    }
+    if (!quiz.routes) {
+        quiz.routes = [];
+    }
+    if (!quiz.nameMap) {
+        quiz.nameMap = {};
+    }
+    saveData();
+};
+
+const addUsers = (guildId, names) => {
+    const quiz = getQuiz(guildId);
+    if (!quiz.nameMap) {
+        quiz.nameMap = {};
     }
 
-    setPendingUsers(names) {
+    const normalizedNames = names.map((name) => capitalizeName(name));
 
-        this.pendingUsers = names;
-    }
-
-    startQuiz(channelId) {
-
-        this.players = [];
-        this.scores = {};
-        this.routes = [];
-
-        this.channelId = channelId;
-
-        this.leaderboardMessageId = null;
-        this.routingMessageId = null;
-
-        this.active = true;
-    }
-
-    endQuiz() {
-        this.active = false;
-    }
-
-    addUsers(names) {
-
-        this.players = names;
-
-        for (const name of names) {
-
-            if (!this.scores[name]) {
-                this.scores[name] = 0;
-            }
+    normalizedNames.forEach((name) => {
+        const key = name.toLowerCase();
+        if (!quiz.nameMap[key]) {
+            quiz.nameMap[key] = name;
         }
-
-        const shuffled = [...names].sort(() => Math.random() - 0.5);
-
-        const routes = [];
-
-        for (let i = 0; i < shuffled.length; i++) {
-
-            const from = shuffled[i];
-            const to = shuffled[(i + 1) % shuffled.length];
-
-            routes.push({ from, to });
+        if (!quiz.scores[key]) {
+            quiz.scores[key] = 0;
         }
+    });
 
-        this.routes = routes;
+    quiz.players = [...new Set([...quiz.players, ...normalizedNames])];
 
-        return routes;
+    const shuffled = [...quiz.players].sort(() => Math.random() - 0.5);
+    quiz.routes = shuffled.map((name, i) => {
+        return { from: name, to: shuffled[(i + 1) % shuffled.length] };
+    });
+
+    saveData();
+    return quiz.routes;
+};
+
+const addScore = (guildId, name, score) => {
+    const quiz = getQuiz(guildId);
+    const key = name.toLowerCase();
+    if (!quiz.scores[key]) {
+        quiz.scores[key] = 0;
     }
+    quiz.scores[key] += score;
+    saveData();
+};
 
-    addScore(name, score) {
+const getLeaderboard = (guildId) => {
+    const quiz = getQuiz(guildId);
+    const board = Object.entries(quiz.scores)
+        .map(([key, score]) => {
+            return { name: quiz.nameMap[key] || key, score };
+        })
+        .sort((a, b) => b.score - a.score);
+    return board;
+};
 
-        if (!this.scores[name]) {
-            this.scores[name] = 0;
-        }
+const endQuiz = (guildId) => {
+    const quiz = getQuiz(guildId);
+    quiz.active = false;
+    saveData();
+};
 
-        this.scores[name] += score;
-
-        return this.scores[name];
-    }
-
-    getLeaderboard() {
-
-        return Object.entries(this.scores)
-            .map(([name, score]) => ({ name, score }))
-            .sort((a, b) => b.score - a.score);
-    }
-}
-
-module.exports = QuizManager;
+module.exports = {
+    getQuiz,
+    startQuiz,
+    addUsers,
+    addScore,
+    getLeaderboard,
+    endQuiz
+};

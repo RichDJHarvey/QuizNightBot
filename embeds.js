@@ -1,27 +1,27 @@
 const { EmbedBuilder } = require('discord.js');
 
-function buildLeaderboard(board) {
-
+const buildLeaderboard = (board) => {
     let description = "";
-
     board.forEach((player, i) => {
-        description += `${i + 1}. ${player.name} - ${player.score}pts\n`;
+        description += `${i + 1}. ${player.name} - ${player.score} pts\n`;
     });
 
-    if (!description) description = "No scores yet.";
+    if (!description) {
+        description = "No scores yet.";
+    }
 
-    return new EmbedBuilder()
-        .setTitle("🏆 Quiz Night Leaderboard")
-        .setDescription(description)
-        .setColor(0xf1c40f)
-        .setTimestamp();
-}
+    const embed = new EmbedBuilder();
+    embed.setTitle("🏆 Quiz Night Leaderboard");
+    embed.setDescription(description);
+    embed.setColor(0xf1c40f);
+    embed.setTimestamp();
 
-function buildRoutes(routes) {
+    return embed;
+};
 
+const buildRoutes = (routes) => {
     let description = "";
-
-    routes.forEach(r => {
+    routes.forEach((r) => {
         description += `**${r.from}** ➜ ${r.to}\n`;
     });
 
@@ -29,52 +29,49 @@ function buildRoutes(routes) {
         description = "No routes generated yet.";
     }
 
-    return new EmbedBuilder()
-        .setTitle("📨 Answer Routing")
-        .setDescription(description)
-        .setColor(0x3498db)
-        .setTimestamp();
-}
+    const embed = new EmbedBuilder();
+    embed.setTitle("📨 Answer Routing");
+    embed.setDescription(description);
+    embed.setColor(0x3498db);
+    embed.setTimestamp();
 
-function buildFinalResults(board) {
+    return embed;
+};
 
+const buildFinalResults = (board) => {
     if (!board.length) {
-
-        return new EmbedBuilder()
-            .setTitle("🏁 Quiz Finished!")
-            .setDescription("No scores were recorded.")
-            .setColor(0x2ecc71)
-            .setTimestamp();
+        const emptyEmbed = new EmbedBuilder();
+        emptyEmbed.setTitle("🏁 Quiz Finished!");
+        emptyEmbed.setDescription("No scores were recorded.");
+        emptyEmbed.setColor(0x2ecc71);
+        emptyEmbed.setTimestamp();
+        return emptyEmbed;
     }
 
     const winner = board[0];
-
     let description = `👑 **Fucking nerd: ${winner.name}**\n\n`;
 
     board.forEach((player, i) => {
-
         let prefix;
-
         if (i === 0) {
             prefix = "🥇";
         } else if (i === 1) {
             prefix = "🥈";
-        }
-        else if (i === 2) {
+        } else if (i === 2) {
             prefix = "🥉";
         } else {
             prefix = `${i + 1}.`;
         }
-
         description += `${prefix} ${player.name} — ${player.score} pts\n`;
-
     });
 
-    return new EmbedBuilder()
-        .setTitle("🏁 Quiz Night Results")
-        .setDescription(description)
-        .setColor(0x2ecc71)
-        .setTimestamp();
-}
+    const embed = new EmbedBuilder();
+    embed.setTitle("🏁 Quiz Night Results");
+    embed.setDescription(description);
+    embed.setColor(0x2ecc71);
+    embed.setTimestamp();
+
+    return embed;
+};
 
 module.exports = { buildLeaderboard, buildRoutes, buildFinalResults };
