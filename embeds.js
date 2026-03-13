@@ -25,7 +25,9 @@ function buildRoutes(routes) {
         description += `**${r.from}** ➜ ${r.to}\n`;
     });
 
-    if (!description) description = "No routes generated yet.";
+    if (!description) {
+        description = "No routes generated yet.";
+    }
 
     return new EmbedBuilder()
         .setTitle("📨 Answer Routing")
@@ -36,24 +38,40 @@ function buildRoutes(routes) {
 
 function buildFinalResults(board) {
 
-    let description = "";
+    if (!board.length) {
+
+        return new EmbedBuilder()
+            .setTitle("🏁 Quiz Finished!")
+            .setDescription("No scores were recorded.")
+            .setColor(0x2ecc71)
+            .setTimestamp();
+    }
+
+    const winner = board[0];
+
+    let description = `👑 **Fucking nerd: ${winner.name}**\n\n`;
 
     board.forEach((player, i) => {
 
-        let medal = "";
+        let prefix;
 
-        if (i === 0) medal = "🥇";
-        else if (i === 1) medal = "🥈";
-        else if (i === 2) medal = "🥉";
+        if (i === 0) {
+            prefix = "🥇";
+        } else if (i === 1) {
+            prefix = "🥈";
+        }
+        else if (i === 2) {
+            prefix = "🥉";
+        } else {
+            prefix = `${i + 1}.`;
+        }
 
-        description += `${medal} ${player.name} - ${player.score}pts\n`;
+        description += `${prefix} ${player.name} — ${player.score} pts\n`;
 
     });
 
-    if (!description) description = "No scores recorded.";
-
     return new EmbedBuilder()
-        .setTitle("🏁 Quiz Finished!")
+        .setTitle("🏁 Quiz Night Results")
         .setDescription(description)
         .setColor(0x2ecc71)
         .setTimestamp();

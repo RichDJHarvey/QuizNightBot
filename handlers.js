@@ -2,7 +2,9 @@ const { buildLeaderboard, buildRoutes, buildFinalResults } = require('./embeds')
 
 async function handleInteraction(interaction, client, quiz) {
 
-    if (!interaction.isChatInputCommand()) return;
+    if (!interaction.isChatInputCommand()) {
+        return;
+    }
 
     if (interaction.commandName === 'add-user') {
 
